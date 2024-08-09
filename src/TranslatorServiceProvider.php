@@ -4,12 +4,14 @@ namespace Dcyilmaz\Translator;
 
 use Illuminate\Support\ServiceProvider;
 use Dcyilmaz\Translator\Commands\TranslateLanguage;
+use Illuminate\Support\Facades\Config;
+use Symfony\Component\Console\Output\ConsoleOutput;
 
 class TranslatorServiceProvider extends ServiceProvider
 {
     public function boot()
     {
-        $this->app->bind('translator', function ($app) {
+        $this->app->singleton('translator', function ($app) {
             return new Translator();
         });
     }
@@ -21,18 +23,20 @@ class TranslatorServiceProvider extends ServiceProvider
                 TranslateLanguage::class,
             ]);
         }
-        // GOOGLE_TRANSLATE_API_KEY kontrolü
-        if (empty(env('GOOGLE_TRANSLATE_API_KEY'))) {
+
+        $this->checkGoogleTranslateApiKey();
+    }
+
+    protected function checkGoogleTranslateApiKey()
+    {
+        if (empty(Config::get('services.google_translate_api_key'))) {
             $this->warnEnvVariable();
         }
     }
 
     protected function warnEnvVariable()
     {
-        $message = "\n\033[33m";
-        $message .= "Please set the GOOGLE_TRANSLATE_API_KEY in your .env file.";
-        $message .= "\033[0m\n";
-
-        echo $message;
+        $output = new ConsoleOutput();
+        $output->writeln('<comment>Please set the GOOGLE_TRANSLATE_API_KEY in your .env file.</comment>');
     }
 }
